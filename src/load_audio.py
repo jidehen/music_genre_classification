@@ -1,5 +1,4 @@
 # Load raw mp3 files, extract features with librosa, store in .npy files
-from math import comb
 from os import write
 import librosa
 import librosa.display
@@ -64,12 +63,12 @@ def walk_files():
     if (len(sys.argv) != 2):
         print("Missing FMA folder number argument")
         exit()
-        
-    mfa_folder_path = fma_dir + sys.argv[1] 
+
+    mfa_folder_path = fma_dir + sys.argv[1]
     if os.path.exists(mfa_folder_path) == False:
-        print(mfa_folder_path + " is not a real folder")   
+        print(mfa_folder_path + " is not a real folder")
         exit()
-        
+
     print("Traversing " + mfa_folder_path)
 
     id_to_spectro = {}
@@ -93,8 +92,8 @@ def walk_files():
     write_to_npy(id_to_spectro)
 
 
-def write_to_npy(data):    
-    path = npy_folder_path + os.sep + sys.argv[1] + '.npy' 
+def write_to_npy(data):
+    path = npy_folder_path + os.sep + sys.argv[1] + '.npy'
     with open(path, 'w+b') as f:
         np.save(f, data)
     print("\nWrote data to " + path)
