@@ -26,40 +26,46 @@ def get_data(track_path):
             track_genre = tracks[i][7]
             if track_genre in genre_dict:
                 # transpose for lstm purposes
-                inputs.append(id_to_features[track_id].T)
+                inputs.append(np.array(id_to_features[track_id]).T)
                 labels.append(genre_dict[track_genre])
 
     #Downsample
-    genre_counter = collections.Counter(labels) #Count the frequency of each genre
-    least_frequent_genre = genre_counter.most_common()[-1] #Find the lowest-freq genre
-    max = least_frequent_genre[1] #Establish count of lowest genre as maximum for all genre sizes
-    genre_counts = [0 for g in genres]
-    tmp_inputs = []
-    tmp_labels = []
-    for i in range(len(labels)):
-        if genre_counts[labels[i]] < max:
-            tmp_labels.append(labels[i])
-            tmp_inputs.append(inputs[i])
-            genre_counts[labels[i]] += 1
-    labels = tmp_labels
-    inputs = tmp_inputs
-    genre_counter = collections.Counter(labels)
-    print("list length : {}".format(len(labels)))
-    print("least frequent: {}".format(least_frequent_genre))
-    print("Frequency of the elements in the List : ", genre_counter)
+    # genre_counter = collections.Counter(labels) #Count the frequency of each genre
+    # least_frequent_genre = genre_counter.most_common()[-1] #Find the lowest-freq genre
+    # max = least_frequent_genre[1] #Establish count of lowest genre as maximum for all genre sizes
+    # genre_counts = [0 for g in genres]
+    # tmp_inputs = []
+    # tmp_labels = []
+    
+    # for i in range(len(labels)):
+    #     if genre_counts[labels[i]] < max:
+    #         tmp_labels.append(labels[i])
+    #         tmp_inputs.append(inputs[i])
+    #         genre_counts[labels[i]] += 1
+    
+    # labels = tmp_labels
+    # inputs = tmp_inputs
+
+    # genre_counter = collections.Counter(labels)
+    # print("list length : {}".format(len(labels)))
+    # print("least frequent: {}".format(least_frequent_genre))
+    # print("Frequency of the elements in the List : ", genre_counter)
+
+    # print("Eyeing labels...")
 
     labels = np.eye(len(genres))[labels]
+    # indices = tf.range(start=0, limit=len(inputs))
+    # shuffled = tf.random.shuffle(indices)
+    # inputs = tf.gather(inputs, shuffled)
+    # labels = tf.gather(labels, shuffled)
 
-    indices = tf.range(start=0, limit=len(inputs))
-    shuffled = tf.random.shuffle(indices)
-    inputs = tf.gather(inputs, shuffled)
-    labels = tf.gather(labels, shuffled)
-
+    print(len(inputs))
     split = int(len(inputs)*.85)
-    train_inputs = inputs[:split]
-    train_labels = labels[:split]
-    test_inputs = inputs[split:]
-    test_labels = labels[split:]
+    train_inputs = np.array(inputs[:split])
+    train_labels = np.array(labels[:split])
+    test_inputs = np.array(inputs[split:])
+    test_labels = np.array(labels[split:])
+    
     return train_inputs, train_labels, test_inputs, test_labels
 
 

@@ -41,10 +41,7 @@ def visualize_loss(losses):
     1. What does the plot demonstrate or show?
     2. How long does your model need to train to reach roughly its best accuracy so far, 
     and how do you know that?
-    Optionally, add your answers to README!
     param losses: an array of loss value from each batch of train
-
-    NOTE: DO NOT EDIT
     
     :return: doesn't return anything, a plot should pop-up
     """
@@ -61,8 +58,8 @@ def main():
     train_inputs, train_labels, test_inputs, test_labels = preprocess.get_data("../data/fma_metadata/tracks.csv")
     print("Training...")
     losses = []
-    for epoch in range(1):
-        losses = train(model, train_inputs=train_inputs, train_labels=train_labels)
+    for epoch in range(5):
+        losses.extend(train(model, train_inputs=train_inputs, train_labels=train_labels))
     print("Testing...")
     test(model, test_inputs=test_inputs, test_labels=test_labels)
     visualize_loss(losses)

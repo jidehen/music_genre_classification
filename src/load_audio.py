@@ -1,5 +1,4 @@
 # Load raw mp3 files, extract features with librosa, store in .npy files
-from math import comb
 from os import write
 import librosa
 import librosa.display
@@ -14,7 +13,6 @@ sampling_rate = 22050
 input_size = audio_duration * sampling_rate
 fma_dir = "../data/fma_medium/"
 npy_folder_path = "../data/npy"
-n_mels = 128
 
 def load_audio(path):
     """
@@ -22,7 +20,6 @@ def load_audio(path):
     :return y: The time series of a loaded audio file of size [input_size]
     """
     y, _ = librosa.load(path=path, sr=sampling_rate)
-
     if (len(y) > input_size):
         y = y[:input_size]
 
@@ -32,16 +29,21 @@ def load_audio(path):
     return y
 
 
-def get_mel_spectrogram(y):
+def get_features(y):
     """
     :param y: Time series extracted from an audio file
     :return spectro: A spectrogram of shape [n_mels, time]
     """
-    spectro = librosa.feature.melspectrogram(
-        y=y, sr=sampling_rate, n_mels=n_mels)
-    spectro = librosa.power_to_db(spectro, ref=np.max)
-
-    return spectro
+    features = []
+    #mfcc = librosa.feature.mfcc(y, sr=sampling_rate)
+    mel_spectro = librosa.feature.melspectrogram(y=y, sr=sampling_rate, n_mels=128)
+    zcr = librosa.feature.zero_crossing_rate(y)
+    chroma = librosa.feature.chroma_stft(y, sr=sampling_rate)
+    #features.extend(mfcc)
+    features.extend(mel_spectro)
+    features.extend(zcr)
+    features.extend(chroma)
+    return features
 
 
 def show_mel_spectrogram(spectro):
@@ -85,16 +87,26 @@ def walk_files():
                 id = int(filename.replace(".mp3", ''))
                 try:
                     y = load_audio(path)
-                    spectro = get_mel_spectrogram(y)
-                    id_to_spectro[id] = spectro
+                    features = get_features(y)
+                    id_to_spectro[id] = features
                 except Exception:
                     continue
 
-    write_to_npy(id_to_spectro)
+    write_to_npy(npy_folder_path + os.sep + sys.argv[1] + '.npy', id_to_spectro)
+
+def walk_small_dataset():
+    id_to_features = {}
+    for filename in os.listdir("../data/fma_small"):
+        if (filename.endswith("mp3")):
+            sys.stdout.write("Writing {}".format(filename))
+            sys.stdout.flush()
+            y = load_audio("../data/fma_small/{}".format(filename))
+            features = get_features(y)
+            id_to_features[features] = features
+    write_to_npy("../data/small.npy", id_to_features)
 
 
-def write_to_npy(data):    
-    path = npy_folder_path + os.sep + sys.argv[1] + '.npy' 
+def write_to_npy(path, data):    
     with open(path, 'w+b') as f:
         np.save(f, data)
     print("\nWrote data to " + path)
@@ -110,7 +122,7 @@ def read_from_npy():
 
 
 def main():
-    walk_files()
+    walk_small_dataset()
 
 
 if __name__ == '__main__':
