@@ -11,7 +11,7 @@ import sys
 audio_duration = 30
 sampling_rate = 22050
 input_size = audio_duration * sampling_rate
-fma_dir = "../data/fma_medium/"
+fma_dir = "../data/"
 npy_folder_path = "../data/npy"
 
 def load_audio(path):
@@ -96,15 +96,22 @@ def walk_files():
 
 def walk_small_dataset():
     id_to_features = {}
-    for filename in os.listdir("../data/fma_small"):
+    directory = os.listdir("../data/fma_small")
+    for i in range(5001, len(directory)):
+        filename = directory[i]
+        sys.stdout.write("\rReading {}, {}/{}".format(filename, i, len(directory)))
+        sys.stdout.flush()
         if (filename.endswith("mp3")):
-            sys.stdout.write("Writing {}".format(filename))
-            sys.stdout.flush()
-            y = load_audio("../data/fma_small/{}".format(filename))
-            features = get_features(y)
-            id_to_features[features] = features
-    write_to_npy("../data/small.npy", id_to_features)
-
+            try:
+                y = load_audio("../data/fma_small/{}".format(filename))
+                id = int(filename.replace(".mp3", ''))
+                features = get_features(y)
+                id_to_features[id] = features
+            except Exception:
+                continue
+        if (i > 0 and i % 1000 == 0) or i == len(directory)-1:
+            write_to_npy("../data/{}.npy".format(i), id_to_features)
+            id_to_features = {}
 
 def write_to_npy(path, data):    
     with open(path, 'w+b') as f:

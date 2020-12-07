@@ -58,7 +58,7 @@ def main():
     train_inputs, train_labels, test_inputs, test_labels = preprocess.get_data("../data/fma_metadata/tracks.csv")
     print("Training...")
     losses = []
-    for epoch in range(5):
+    for epoch in range(1):
         losses.extend(train(model, train_inputs=train_inputs, train_labels=train_labels))
     print("Testing...")
     test(model, test_inputs=test_inputs, test_labels=test_labels)

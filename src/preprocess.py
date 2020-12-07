@@ -1,5 +1,5 @@
 import ast
-import pandas
+import pandas as pd
 import os.path
 import numpy as np
 from track import Track
@@ -13,53 +13,35 @@ import collections
 
 def get_data(track_path):
 
-    genres = ['Experimental', 'Electronic', 'Rock', 'Pop', 'Folk', 'Hip-Hop', 'International', 'Classical']
-    genre_dict = {genre: id for id, genre in enumerate(genres)}
-    tracks = pandas.read_csv(track_path, index_col=0, header=[0, 1])
-    tracks = tracks['track'].to_numpy()
+    all_genres = pd.read_csv("../data/fma_metadata/genres.csv", index_col=0)
+    all_genres = all_genres.loc[all_genres['top_level'].unique()].sort_values('#tracks', ascending=False).index.values.tolist()[0:8]
+    genre_dict = {genre: id for id, genre in enumerate(all_genres)}
+    print("Top level genres: {}".format(all_genres))
+    tracks = pd.read_csv(track_path, index_col=0, header=[0, 1])
     id_to_features = read_from_npy()
     inputs = []
     labels = []
-    for i in range(len(tracks)):
-        track_id = i+2
-        if track_id in id_to_features:
-            track_genre = tracks[i][7]
-            if track_genre in genre_dict:
-                # transpose for lstm purposes
-                inputs.append(np.array(id_to_features[track_id]).T)
-                labels.append(genre_dict[track_genre])
-
-    #Downsample
-    # genre_counter = collections.Counter(labels) #Count the frequency of each genre
-    # least_frequent_genre = genre_counter.most_common()[-1] #Find the lowest-freq genre
-    # max = least_frequent_genre[1] #Establish count of lowest genre as maximum for all genre sizes
-    # genre_counts = [0 for g in genres]
-    # tmp_inputs = []
-    # tmp_labels = []
+    count = 0
+    for id, row in tracks.iterrows():
+        if id in id_to_features:
+            track_genres = row['track']['genres_all'][1:-1]
+            track_features = id_to_features[id]
+            if len(track_genres) > 0:
+                track_genres = [int(g.strip()) for g in track_genres.split(',')]
+                genres_in_all = []
+                for g in track_genres:
+                    if g in all_genres:
+                        inputs.append(track_features)
+                        labels.append(genre_dict[g])
+                        break #only add one top genree
     
-    # for i in range(len(labels)):
-    #     if genre_counts[labels[i]] < max:
-    #         tmp_labels.append(labels[i])
-    #         tmp_inputs.append(inputs[i])
-    #         genre_counts[labels[i]] += 1
+    labels = np.eye(len(all_genres))[labels]
     
-    # labels = tmp_labels
-    # inputs = tmp_inputs
+    indices = tf.range(start=0, limit=len(inputs))
+    shuffled = tf.random.shuffle(indices)
+    inputs = tf.gather(inputs, shuffled)
+    labels = tf.gather(labels, shuffled)
 
-    # genre_counter = collections.Counter(labels)
-    # print("list length : {}".format(len(labels)))
-    # print("least frequent: {}".format(least_frequent_genre))
-    # print("Frequency of the elements in the List : ", genre_counter)
-
-    # print("Eyeing labels...")
-
-    labels = np.eye(len(genres))[labels]
-    # indices = tf.range(start=0, limit=len(inputs))
-    # shuffled = tf.random.shuffle(indices)
-    # inputs = tf.gather(inputs, shuffled)
-    # labels = tf.gather(labels, shuffled)
-
-    print(len(inputs))
     split = int(len(inputs)*.85)
     train_inputs = np.array(inputs[:split])
     train_labels = np.array(labels[:split])
