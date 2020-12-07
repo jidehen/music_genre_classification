@@ -97,7 +97,7 @@ def walk_files():
 def walk_small_dataset():
     id_to_features = {}
     directory = os.listdir("../data/fma_small")
-    for i in range(5001, len(directory)):
+    for i in range(len(directory)):
         filename = directory[i]
         sys.stdout.write("\rReading {}, {}/{}".format(filename, i, len(directory)))
         sys.stdout.flush()

@@ -12,8 +12,12 @@ def train(model, train_inputs, train_labels):
         print("Batch " + str(i+1) + " / " + str(max_itr))
         input_batch = preprocess.get_batch(train_inputs, i*model.batch_size, model.batch_size)
         label_batch = preprocess.get_batch(train_labels, i*model.batch_size, model.batch_size)
+        indices = tf.range(start=0, limit=len(input_batch))
+        shuffled = tf.random.shuffle(indices)
+        input_batch = tf.gather(np.array(input_batch), shuffled)
+        label_batch = tf.gather(np.array(label_batch), shuffled)
         with tf.GradientTape() as tape:
-            logits = model.call(input_batch)
+            logits = model.call(input_batch, is_training=None)
             loss = model.loss(logits, label_batch)
             losses.append(loss)
             print("Batch loss: {}".format(loss))
@@ -24,13 +28,11 @@ def train(model, train_inputs, train_labels):
 
 def test(model, test_inputs, test_labels):
     max_itr = len(test_inputs) // model.batch_size
-    loss = 0
     accuracies = []
     for i in range(max_itr):
         input_batch = preprocess.get_batch(test_inputs, i*model.batch_size, model.batch_size)
         label_batch = preprocess.get_batch(test_labels, i*model.batch_size, model.batch_size)
-        logits = model.call(input_batch)
-        loss += model.loss(logits, label_batch)
+        logits = model.call(input_batch, is_training=False)
         accuracies.append(model.accuracy(logits, label_batch))
     print("Testing accuracy: ", tf.reduce_mean(accuracies))
 
@@ -56,10 +58,13 @@ def main():
     model = Model()
     print("Preprocessing...")
     train_inputs, train_labels, test_inputs, test_labels = preprocess.get_data("../data/fma_metadata/tracks.csv")
+    print(tf.shape(train_inputs))
     print("Training...")
     losses = []
-    for epoch in range(1):
-        losses.extend(train(model, train_inputs=train_inputs, train_labels=train_labels))
+    for epoch in range(20):
+        loss = train(model, train_inputs=train_inputs, train_labels=train_labels)
+        losses.extend(loss)
+
     print("Testing...")
     test(model, test_inputs=test_inputs, test_labels=test_labels)
     visualize_loss(losses)

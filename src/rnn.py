@@ -11,27 +11,25 @@ class Model(tf.keras.Model):
 
         super(Model, self).__init__()
 
-        self.batch_size = 50
-        self.rnn_size = 50
-        self.hidden_size = 100 
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=.00001)
-        #tf.keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=.00001, decay_steps=10000, decay_rate=.9)
-          #  ) #learning rate schedule: inverse time decay w/ floor (1e-5)
+        self.batch_size = 200
+        self.rnn_size = 256
+        self.hidden_size = 164 
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=.0001)
         self.num_classes = 8
         # transformer instead of lstm multiheaded
         # additional song features: 
-        self.LSTM = tf.keras.layers.GRU(self.rnn_size, return_sequences=False, return_state=True, dropout=.3)
-        self.leaky_relu = tf.keras.layers.LeakyReLU()
+        self.LSTM = tf.keras.layers.GRU(self.rnn_size, return_sequences=False, return_state=True, dropout=.4, dtype=np.float64)
+        self.dense_1 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
         self.dense_2 = tf.keras.layers.Dense(self.num_classes, activation='softmax')
 
-    def call(self, inputs, initial_state=None):
+    def call(self, inputs, initial_state=None, is_training=True):
         """
         :param inputs: shape [batch_size, time_steps, features]
         """        
         # pass thru dense layer
-        lstm_output, state  = self.LSTM(inputs, initial_state=initial_state)
-        outputs = self.leaky_relu(lstm_output)
-        outputs = self.dense_2(outputs)
+        lstm_output, _  = self.LSTM(inputs, initial_state=initial_state, training=is_training)
+        outputs = self.dense_1(lstm_output)
+        outputs = self.dense_2(outputs) 
         return outputs
 
     def loss(self, probs, labels):
@@ -47,7 +45,7 @@ class Model(tf.keras.Model):
         """
         # TODO: calculate the batch accuracy
         count = 0
-        for x in range(len(probabilities)):
+        for x in range(np.shape(probabilities)[0]):
             if np.argmax(labels[x]) == np.argmax(probabilities[x]):
                 count += 1
         return count/len(probabilities) 
