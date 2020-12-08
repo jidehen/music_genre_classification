@@ -37,10 +37,10 @@ def get_data(track_path):
     
     labels = np.eye(len(all_genres))[labels]
     
-    #indices = tf.range(start=0, limit=len(inputs))
-    #shuffled = tf.random.shuffle(indices)
-    #inputs = tf.gather(np.array(inputs), shuffled)
-    #labels = tf.gather(np.array(labels), shuffled)
+    indices = tf.range(start=0, limit=len(inputs))
+    shuffled = tf.random.shuffle(indices)
+    inputs = tf.gather(np.array(inputs), shuffled)
+    labels = tf.gather(np.array(labels), shuffled)
 
     split = int(len(inputs)*.85)
     train_inputs = np.array(inputs[:split])

@@ -61,7 +61,8 @@ def main():
     print(tf.shape(train_inputs))
     print("Training...")
     losses = []
-    for epoch in range(20):
+    for epoch in range(3):
+        print("Epoch {}".format(epoch))
         loss = train(model, train_inputs=train_inputs, train_labels=train_labels)
         losses.extend(loss)
 
