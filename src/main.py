@@ -38,8 +38,8 @@ def test(model, numerical_inputs, feature_inputs, test_labels):
         numerical_input_batch = preprocess.get_batch(numerical_inputs, i*model.batch_size, model.batch_size)
         feature_input_batch = preprocess.get_batch(feature_inputs, i*model.batch_size, model.batch_size)
         label_batch = preprocess.get_batch(test_labels, i*model.batch_size, model.batch_size)
-
-        logits = model.call(numerical_input_batch, feature_input_batch, is_training=False)
+                        
+        logits = model.call(numerical_input_batch, tf.convert_to_tensor(feature_input_batch), is_training=False)
         accuracies.append(model.accuracy(logits, label_batch))
     print("Testing accuracy: ", tf.reduce_mean(accuracies))
 
@@ -71,7 +71,8 @@ def main():
 
     print("Training...")
     losses = []
-    for epoch in range(1):
+    for epoch in range(5):
+        print("epoch {}".format(epoch))
         losses.extend(train(model, numerical_train, feature_train, train_labels))
 
     print("Testing...")
