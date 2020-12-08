@@ -18,7 +18,7 @@ class Model(tf.keras.Model):
         self.num_classes = 8
         # transformer instead of lstm multiheaded
         # additional song features: 
-        self.LSTM = tf.keras.layers.GRU(self.rnn_size, return_sequences=False, return_state=True, dropout=.4, dtype=np.float64)
+        self.LSTM = tf.keras.layers.GRU(self.rnn_size, return_sequences=False, return_state=True, dropout=.6, dtype=np.float64)
         self.dense_1 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
         self.dense_2 = tf.keras.layers.Dense(self.num_classes, activation='softmax')
 
