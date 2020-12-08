@@ -8,12 +8,6 @@ import matplotlib.pyplot as plt
 def train(model, numerical_inputs, feature_inputs, train_labels):
     max_itr = len(feature_inputs) // model.batch_size
 
-    indices = tf.range(start=0, limit=len(feature_inputs))
-    shuffled = tf.random.shuffle(indices)
-    numerical_inputs = tf.gather(np.array(numerical_inputs), shuffled)
-    feature_inputs = tf.gather(np.array(feature_inputs), shuffled)
-
-
     losses = []
     for i in range(max_itr):
         print("Batch " + str(i+1) + " / " + str(max_itr))
@@ -21,10 +15,14 @@ def train(model, numerical_inputs, feature_inputs, train_labels):
         feature_input_batch = preprocess.get_batch(feature_inputs, i*model.batch_size, model.batch_size)
         label_batch = preprocess.get_batch(train_labels, i*model.batch_size, model.batch_size)
 
-        label_batch = tf.gather(np.array(label_batch), shuffled)
+        # indices = tf.range(start=0, limit=len(feature_inputs))
+        # shuffled = tf.random.shuffle(indices)
+        # numerical_input_batch = tf.gather(np.array(numerical_input_batch), shuffled)
+        # feature_input_batch = tf.gather(np.array(feature_input_batch), shuffled)
+        # label_batch = tf.gather(np.array(label_batch), shuffled)
 
         with tf.GradientTape() as tape:
-            logits = model.call(numerical_input_batch, feature_input_batch, is_training=None)
+            logits = model.call(numerical_input_batch, tf.convert_to_tensor(feature_input_batch), is_training=None)
             loss = model.loss(logits, label_batch)
             losses.append(loss)
             print("Batch loss: {}".format(loss))

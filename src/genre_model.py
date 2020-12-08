@@ -10,19 +10,18 @@ class Model(tf.keras.Model):
         super(Model, self).__init__()
 
         self.batch_size = 200
-        self.numerical_hidden_size = 100
-        # self.feature_hidden_size = 164
-        # self.hidden_size = 264
-        # self.rnn_size = 256
+        self.hidden_size = 264
+        self.rnn_size = 256
         self.num_classes = 8
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
-        self.num_dense1 = tf.keras.layers.Dense(self.numerical_hidden_size, activation='relu')
-        # self.feat_dense1 = tf.keras.layers.Dense(self.feature_hidden_size, activation='relu')
-        #
-        # self.LSTM = tf.keras.layers.GRU(self.rnn_size, return_sequences=False, return_state=True, dropout=.4, dtype=np.float64)
-        #
-        # self.dense_layer = tf.keras.layers.Dense(self.hidden_size, activation='relu')
+        self.num_dense1 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
+        self.feat_dense1 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
+
+        self.LSTM = tf.keras.layers.GRU(self.rnn_size, return_sequences=False, return_state=True, dropout=.4, dtype=np.float64)
+
+        self.dense_layer1 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
+        self.dense_layer2 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
         self.softmax_layer = tf.keras.layers.Dense(self.num_classes, activation='softmax')
 
     def call(self, numerical_inputs, feature_inputs, initial_state=None, is_training=True):
@@ -30,16 +29,14 @@ class Model(tf.keras.Model):
         :param inputs: shape [batch_size, features]
         """
 
-        numerical_output1 = self.num_dense1(numerical_inputs)
-        numerical_output = self.softmax_layer(numerical_output1)
-        # lstm_output, _ = self.LSTM(feature_inputs, initial_state=initial_state, training=is_training)
-        # feature_output = self.feat_dense1(lstm_output)
-        #
-        # inputs = np.stack((numerical_output, feature_output), axis=1)
-        #
-        # output = self.softmax_layer(self.dense_layer(inputs))
+        numerical_output = self.num_dense1(numerical_inputs)
 
-        return numerical_output
+        lstm_output, _ = self.LSTM(feature_inputs, initial_state=initial_state, training=is_training)
+        feature_output = self.feat_dense1(lstm_output)
+
+        inputs = tf.concat((numerical_output, feature_output), axis=1)
+
+        return self.softmax_layer(self.dense_layer2(self.dense_layer1(inputs)))
 
     def loss(self, probs, labels):
         return tf.reduce_mean(tf.keras.losses.categorical_crossentropy(labels, probs))

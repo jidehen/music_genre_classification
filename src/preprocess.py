@@ -25,7 +25,8 @@ def get_data(track_path):
     for id, row in tracks.iterrows():
         if id in id_to_features:
             track_genres = row['track']['genres_all'][1:-1]
-            track_features = np.array(id_to_features[id])
+            track_features = np.array(id_to_features[id])[:50].T
+            track_featurse = track_features[0:100]
             if len(track_genres) > 0:
                 track_genres = [int(g.strip()) for g in track_genres.split(',')]
                 genres_in_all = []
@@ -37,7 +38,7 @@ def get_data(track_path):
                 artist = row['artist']['name']
                 for g in track_genres:
                     if g in all_genres:
-                        inputs.append(Track(id, title, artist, track_features.T, track_listens, album_listens, favorites, interests))
+                        inputs.append(Track(id, title, artist, track_features, track_listens, album_listens, favorites, interests))
                         labels.append(genre_dict[g])
                         break #only add one top genre
 
