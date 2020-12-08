@@ -29,27 +29,46 @@ def get_data(track_path):
             if len(track_genres) > 0:
                 track_genres = [int(g.strip()) for g in track_genres.split(',')]
                 genres_in_all = []
+                track_listens = row['track']['listens']
+                album_listens = row['album']['listens']
+                favorites = row['track']['favorites']
+                interests = row['track']['interest']
+                title = row['track']['title']
+                artist = row['artist']['name']
                 for g in track_genres:
                     if g in all_genres:
-                        inputs.append(track_features.T)
+                        inputs.append(Track(id, title, artist, track_features.T, track_listens, album_listens, favorites, interests))
                         labels.append(genre_dict[g])
                         break #only add one top genre
-    
+
     labels = np.eye(len(all_genres))[labels]
-    
-    #indices = tf.range(start=0, limit=len(inputs))
-    #shuffled = tf.random.shuffle(indices)
-    #inputs = tf.gather(np.array(inputs), shuffled)
-    #labels = tf.gather(np.array(labels), shuffled)
 
     split = int(len(inputs)*.85)
     train_inputs = np.array(inputs[:split])
     train_labels = np.array(labels[:split])
     test_inputs = np.array(inputs[split:])
     test_labels = np.array(labels[split:])
-    
+
     return train_inputs, train_labels, test_inputs, test_labels
 
 
 def get_batch(data, start, size):
     return data[start:start+size]
+
+def make_numerical_lists(train_inputs, test_inputs):
+    train_track_listens = [x.track_listens for x in train_inputs]
+    # train_album_listens = [x.album_listens for x in train_inputs]
+    train_favorites = [x.favorites for x in train_inputs]
+    train_interests = [x.interests for x in train_inputs]
+    train_inputs = np.stack((train_track_listens, train_favorites, train_interests), axis=1)
+
+    test_track_listens = [x.track_listens for x in test_inputs]
+    # test_album_listens = [x.album_listens for x in test_inputs]
+    test_favorites = [x.favorites for x in test_inputs]
+    test_interests = [x.interests for x in test_inputs]
+    test_inputs = np.stack((test_track_listens, test_favorites, test_interests), axis=1)
+
+    return train_inputs, test_inputs
+
+def make_feature_lists(train_inputs, test_inputs):
+    return [x.features for x in train_inputs], [y.features for y in test_inputs]
