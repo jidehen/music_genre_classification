@@ -76,22 +76,45 @@ def make_feature_lists(train_inputs, test_inputs):
     return [x.features for x in train_inputs], [y.features for y in test_inputs]
 
 def make_char_dict(inputs):
-    titles = [x.title.replace(" ", "").lower() for x in inputs] # get a list of titles
-    titles = np.asarray(titles).flatten()
+    sentences = [x.title.lower() for x in inputs] # get a list of titles
+    chars = [char for line in sentences for word in line.split() for char in word]
+    # chars = [char for word in words]
 
-    all_chars = []
-    for word in titles:
-        for char in word:
-            if char.isalpha():
-                all_chars.append(char)
+    # all_chars = []
+    # for word in titles:
+    #     for char in word:
+    #         if char.isalpha():
+    #             all_chars.append(char)
+    #
+    # vocab_set = sorted(set(all_chars))
+    # vocab_dict = {val:id for id, val in enumerate(vocab_set)}
+    #
+    # title_sequences = []
+    # for word in titles:
+    #     for char in word:
+    #         if char.isalpha():
+    #             title_sequences.append(vocab_dict[char])
 
-    vocab_set = sorted(set(all_chars))
-    vocab_dict = {val:id for id, val in enumerate(vocab_set)}
 
-    title_sequences = []
-    for word in titles:
-        for char in word:
-            if char.isalpha():
-                title_sequences.append(vocab_dict[char])
 
-    return title_sequences, vocab_dict #a list of titles in the form of int sequences
+    # Set window size
+    WINDOW_SIZE = 1
+
+    # Build Vocabulary (char id's)
+    vocab = set(chars) # collects all unique words in our dataset (vocab)
+    char2id = {w: i for i, w in enumerate(list(vocab))} # maps each word in our vocab to a unique index (label encode)
+
+
+    s = map(lambda x: x.split(), sentences)
+
+    #Create Skipgram Data
+    data = []
+    for sentence in s:
+        for word in sentence:
+            for char_index, char in enumerate(word):
+                for nb_char in word[max(char_index - WINDOW_SIZE, 0) : min(char_index + WINDOW_SIZE, len(word))]:
+                    if nb_char != char:
+                        data.append([char2id[char], char2id[nb_char]])
+
+    # return title_sequences, vocab_dict #a list of titles in the form of int sequences
+    return data
