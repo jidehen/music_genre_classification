@@ -3,13 +3,13 @@ import numpy as np
 from tensorflow.keras import Model
 from preprocess import get_data, get_batch
 
-class Model(tf.keras.Model):
+class RNN_Model(tf.keras.Model):
     def __init__(self):
         """
         The Model class predicts the genre of a track.
         """
 
-        super(Model, self).__init__()
+        super(RNN_Model, self).__init__()
 
         self.batch_size = 200
         self.rnn_size = 256
@@ -20,7 +20,8 @@ class Model(tf.keras.Model):
         self.num_features = 14
         # transformer instead of lstm multiheaded
         # additional song features: 
-        self.LSTM = tf.keras.layers.LSTM(self.rnn_size, input_shape=(self.window_size, self.num_features), return_sequences=False, return_state=True, dropout=.65, dtype=np.float64)
+        self.LSTM = tf.keras.layers.LSTM(self.rnn_size, input_shape=(self.window_size, self.num_features), return_sequences=True, dropout=.65, dtype=np.float64)
+        self.LSTM_2 = tf.keras.layers.LSTM(self.rnn_size)
         self.dense_1 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
         #self.dense_2 = tf.keras.layers.Dense(256, activation='relu')
         self.soft_max = tf.keras.layers.Dense(self.num_classes, activation='softmax')
@@ -30,8 +31,9 @@ class Model(tf.keras.Model):
         :param inputs: shape [batch_size, time_steps, features]
         """        
         # pass thru dense layer
-        ouputs, _, _  = self.LSTM(inputs, initial_state=initial_state, training=is_training)
-        outputs = self.dense_1(ouputs)
+        outputs = self.LSTM(inputs, training=is_training)
+        outputs = self.LSTM_2(outputs)
+        outputs = self.dense_1(outputs)
         #outputs = self.dropout(outputs)
         #outputs = self.dense_2(outputs)
         outputs = self.soft_max(outputs) 

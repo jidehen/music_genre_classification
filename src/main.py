@@ -2,8 +2,10 @@ import preprocess
 from load_audio import walk_files, read_from_npy
 import numpy as np
 import tensorflow as tf
-from rnn import Model
+from transformer import Transformer_Model
+from rnn import RNN_Model
 import matplotlib.pyplot as plt
+import sys
 
 def train(model, train_inputs, train_labels):
     max_itr = len(train_inputs) // model.batch_size
@@ -57,18 +59,31 @@ def visualize_loss(losses):
     plt.show()
 
 def main():
-    model = Model()
+    if len(sys.argv) != 2 or sys.argv[1] not in {"RNN","TRANSFORMER"}:
+        print("USAGE: python assignment.py <Model Type>")
+        print("<Model Type>: [RNN/TRANSFORMER]")
+        exit()
+
+    if sys.argv[1] == "RNN":
+        model = RNN_Model()
+        epoch = 15
+    elif sys.argv[1] == "TRANSFORMER":
+        model = Transformer_Model()
+        epoch = 100
+
     print("Preprocessing...")
     train_inputs, train_labels, test_inputs, test_labels = preprocess.get_data("../data/fma_metadata/tracks.csv")
+
     print("Training...")
     losses = []
-    for epoch in range(5):
+    for epoch in range(epoch):
         print("Epoch {}".format(epoch+1))
         loss = train(model, train_inputs=train_inputs, train_labels=train_labels)
         losses.extend(loss)
 
     print("Testing...")
     test(model, test_inputs=test_inputs, test_labels=test_labels)
+
     visualize_loss(losses)
     
 if __name__ == '__main__':

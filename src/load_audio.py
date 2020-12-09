@@ -37,12 +37,12 @@ def get_features(y):
     features = []
     mfcc = librosa.feature.mfcc(y, sr=sampling_rate, n_mfcc=14)
     # mel_spectro = librosa.feature.melspectrogram(y=y, sr=sampling_rate, n_mels=128)
-    # zcr = librosa.feature.zero_crossing_rate(y)
-    # chroma = librosa.feature.chroma_stft(y, sr=sampling_rate)
+    zcr = librosa.feature.zero_crossing_rate(y)
+    chroma = librosa.feature.chroma_stft(y, sr=sampling_rate)
     features.extend(mfcc)
     # features.extend(mel_spectro)
-    # features.extend(zcr)
-    # features.extend(chroma)
+    features.extend(zcr)
+    features.extend(chroma)
     return features
 
 
