@@ -69,52 +69,48 @@ def make_numerical_lists(train_inputs, test_inputs):
     test_favorites = [x.favorites for x in test_inputs]
     test_interests = [x.interests for x in test_inputs]
     test_inputs = np.stack((test_track_listens, test_favorites, test_interests), axis=1)
-    print(train_inputs[0])
+
     return train_inputs, test_inputs
 
 def make_feature_lists(train_inputs, test_inputs):
     return [x.features for x in train_inputs], [y.features for y in test_inputs]
 
 def make_char_dict(inputs):
-    sentences = [x.title.lower() for x in inputs] # get a list of titles
-    chars = [char for line in sentences for word in line.split() for char in word]
-    # chars = [char for word in words]
+    titles = []
+    max_len = 0
+    for track in inputs:
+        title = track.title
+        curr_max = len(title)
+        max_len = max(max_len, curr_max)
+        titles.append(title.lower())
 
-    # all_chars = []
-    # for word in titles:
-    #     for char in word:
-    #         if char.isalpha():
-    #             all_chars.append(char)
-    #
-    # vocab_set = sorted(set(all_chars))
-    # vocab_dict = {val:id for id, val in enumerate(vocab_set)}
-    #
-    # title_sequences = []
-    # for word in titles:
-    #     for char in word:
-    #         if char.isalpha():
-    #             title_sequences.append(vocab_dict[char])
+    title_lists = []
+    idx = 0
+    for title in titles:
+        padding = ["*PAD*"] * (max_len - len(title))
+        title_lists.append(list(title) + padding)
 
 
 
     # Set window size
-    WINDOW_SIZE = 1
-
-    # Build Vocabulary (char id's)
+    WINDOW_SIZE = max_len
+    #
+    # # Build Vocabulary (char id's)
+    chars = [j for i in title_lists for j in i]
     vocab = set(chars) # collects all unique words in our dataset (vocab)
     char2id = {w: i for i, w in enumerate(list(vocab))} # maps each word in our vocab to a unique index (label encode)
 
 
-    s = map(lambda x: x.split(), sentences)
+    # s = map(lambda x: x.split(), title_lists)
 
     #Create Skipgram Data
     data = []
-    for sentence in s:
-        for word in sentence:
-            for char_index, char in enumerate(word):
-                for nb_char in word[max(char_index - WINDOW_SIZE, 0) : min(char_index + WINDOW_SIZE, len(word))]:
-                    if nb_char != char:
-                        data.append([char2id[char], char2id[nb_char]])
+    for title in title_lists:
+        for char_index, char in enumerate(title):
+            for nb_char in title[max(char_index - WINDOW_SIZE, 0) : min(char_index + WINDOW_SIZE, len(title))]:
+                if nb_char != char:
+                    data.append([char2id[char], char2id[nb_char]])
+
 
     # return title_sequences, vocab_dict #a list of titles in the form of int sequences
-    return data
+    return char2id, data
