@@ -13,7 +13,7 @@ class Model(tf.keras.Model):
         self.hidden_size = 264
         self.rnn_size = 256
         self.num_classes = 8
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
 
         self.num_dense1 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
         self.feat_dense1 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
@@ -30,7 +30,7 @@ class Model(tf.keras.Model):
         """
 
         numerical_output = self.num_dense1(numerical_inputs)
-
+        numerical_output = self.dense_layer1(numerical_output)
         lstm_output, _ = self.LSTM(feature_inputs, initial_state=initial_state, training=is_training)
         feature_output = self.feat_dense1(lstm_output)
 

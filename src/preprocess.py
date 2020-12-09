@@ -69,7 +69,7 @@ def make_numerical_lists(train_inputs, test_inputs):
     test_favorites = [x.favorites for x in test_inputs]
     test_interests = [x.interests for x in test_inputs]
     test_inputs = np.stack((test_track_listens, test_favorites, test_interests), axis=1)
-
+    print(train_inputs[0])
     return train_inputs, test_inputs
 
 def make_feature_lists(train_inputs, test_inputs):
