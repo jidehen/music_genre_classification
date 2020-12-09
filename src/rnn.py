@@ -32,8 +32,8 @@ class Model(tf.keras.Model):
         """        
         # pass thru dense layer
         outputs, _, _  = self.LSTM(inputs, initial_state=initial_state, training=is_training)
-        outputs, _ = self.LSTM_2(outputs)
-        outputs = self.dense_1(ouputs)
+        outputs = self.LSTM_2(outputs)
+        outputs = self.dense_1(outputs)
         #outputs = self.dropout(outputs)
         #outputs = self.dense_2(outputs)
         outputs = self.soft_max(outputs) 
