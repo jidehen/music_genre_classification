@@ -3,6 +3,7 @@ from load_audio import walk_files, read_from_npy
 import numpy as np
 import tensorflow as tf
 from genre_model import Model
+from seq2seq import RNN_Seq2Seq
 import matplotlib.pyplot as plt
 
 def train(model, numerical_inputs, feature_inputs, train_labels):
@@ -39,7 +40,7 @@ def test(model, numerical_inputs, feature_inputs, test_labels):
         feature_input_batch = preprocess.get_batch(feature_inputs, i*model.batch_size, model.batch_size)
         label_batch = preprocess.get_batch(test_labels, i*model.batch_size, model.batch_size)
 
-        logits = model.call(numerical_input_batch, feature_input_batch, is_training=False)
+        logits = model.call(numerical_input_batch, tf.convert_to_tensor(feature_input_batch), is_training=False)
         accuracies.append(model.accuracy(logits, label_batch))
     print("Testing accuracy: ", tf.reduce_mean(accuracies))
 
@@ -62,20 +63,25 @@ def visualize_loss(losses):
     plt.show()
 
 def main():
-    model = Model()
+    # model = Model()
+
     print("Preprocessing...")
     train_inputs, train_labels, test_inputs, test_labels = preprocess.get_data("../data/fma_metadata/tracks.csv")
 
-    numerical_train, numerical_test = preprocess.make_numerical_lists(train_inputs, test_inputs)
-    feature_train, feature_test = preprocess.make_feature_lists(train_inputs, test_inputs)
+    vocab_list, vocab_dict = preprocess.make_char_dict(train_inputs)
+    model = RNN_Seq2Seq(len(vocab_list))
+    model.call(vocab_list[:500])
 
-    print("Training...")
-    losses = []
-    for epoch in range(1):
-        losses.extend(train(model, numerical_train, feature_train, train_labels))
-
-    print("Testing...")
-    test(model, numerical_test, feature_test, test_labels)
+    # numerical_train, numerical_test = preprocess.make_numerical_lists(train_inputs, test_inputs)
+    # feature_train, feature_test = preprocess.make_feature_lists(train_inputs, test_inputs)
+    #
+    # print("Training...")
+    # losses = []
+    # for epoch in range(1):
+    #     losses.extend(train(model, numerical_train, feature_train, train_labels))
+    #
+    # print("Testing...")
+    # test(model, numerical_test, feature_test, test_labels)
 
     # visualize_loss(losses)
 

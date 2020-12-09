@@ -7,6 +7,7 @@ from load_audio import read_from_npy
 import math
 import tensorflow as tf
 import collections
+import string
 
 # Referencing - https://github.com/mdeff/fma/blob/master/utils.py
 
@@ -73,3 +74,24 @@ def make_numerical_lists(train_inputs, test_inputs):
 
 def make_feature_lists(train_inputs, test_inputs):
     return [x.features for x in train_inputs], [y.features for y in test_inputs]
+
+def make_char_dict(inputs):
+    titles = [x.title.replace(" ", "").lower() for x in inputs] # get a list of titles
+    titles = np.asarray(titles).flatten()
+
+    all_chars = []
+    for word in titles:
+        for char in word:
+            if char.isalpha():
+                all_chars.append(char)
+
+    vocab_set = sorted(set(all_chars))
+    vocab_dict = {val:id for id, val in enumerate(vocab_set)}
+
+    title_sequences = []
+    for word in titles:
+        for char in word:
+            if char.isalpha():
+                title_sequences.append(vocab_dict[char])
+
+    return title_sequences, vocab_dict #a list of titles in the form of int sequences
