@@ -33,6 +33,8 @@ def test(model, test_inputs, test_labels):
         input_batch = preprocess.get_batch(test_inputs, i*model.batch_size, model.batch_size)
         label_batch = preprocess.get_batch(test_labels, i*model.batch_size, model.batch_size)
         logits = model.call(input_batch, is_training=False)
+        loss = model.loss(logits, label_batch)
+        print("Testing batch {} loss: {}".format(i, loss))
         accuracies.append(model.accuracy(logits, label_batch))
     print("Testing accuracy: ", tf.reduce_mean(accuracies))
 
@@ -58,11 +60,10 @@ def main():
     model = Model()
     print("Preprocessing...")
     train_inputs, train_labels, test_inputs, test_labels = preprocess.get_data("../data/fma_metadata/tracks.csv")
-    print(tf.shape(train_inputs))
     print("Training...")
     losses = []
-    for epoch in range(3):
-        print("Epoch {}".format(epoch))
+    for epoch in range(5):
+        print("Epoch {}".format(epoch+1))
         loss = train(model, train_inputs=train_inputs, train_labels=train_labels)
         losses.extend(loss)
 

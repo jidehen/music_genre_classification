@@ -21,22 +21,19 @@ def get_data(track_path):
     id_to_features = read_from_npy()
     inputs = []
     labels = []
-    count = 0
     for id, row in tracks.iterrows():
         if id in id_to_features:
             track_genres = row['track']['genres_all'][1:-1]
             track_features = np.array(id_to_features[id])
             if len(track_genres) > 0:
                 track_genres = [int(g.strip()) for g in track_genres.split(',')]
-                genres_in_all = []
                 for g in track_genres:
                     if g in all_genres:
-                        inputs.append(track_features.T)
+                        inputs.append(track_features.T[:250])
                         labels.append(genre_dict[g])
                         break #only add one top genre
     
     labels = np.eye(len(all_genres))[labels]
-    
     indices = tf.range(start=0, limit=len(inputs))
     shuffled = tf.random.shuffle(indices)
     inputs = tf.gather(np.array(inputs), shuffled)
