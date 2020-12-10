@@ -7,6 +7,7 @@ from load_audio import read_from_npy
 import math
 import tensorflow as tf
 import collections
+import string
 
 # Referencing - https://github.com/mdeff/fma/blob/master/utils.py
 
@@ -24,29 +25,92 @@ def get_data(track_path):
     for id, row in tracks.iterrows():
         if id in id_to_features:
             track_genres = row['track']['genres_all'][1:-1]
-            track_features = np.array(id_to_features[id])
+            track_features = np.array(id_to_features[id]).T[:250]
             if len(track_genres) > 0:
                 track_genres = [int(g.strip()) for g in track_genres.split(',')]
+                track_listens = row['track']['listens']
+                album_listens = row['album']['listens']
+                favorites = row['track']['favorites']
+                interests = row['track']['interest']
+                title = row['track']['title']
+                artist = row['artist']['name']
                 for g in track_genres:
                     if g in all_genres:
-                        inputs.append(track_features.T[:250])
+                        inputs.append(Track(id, title, artist, track_features, track_listens, album_listens, favorites, interests))
                         labels.append(genre_dict[g])
                         break #only add one top genre
-    
+
     labels = np.eye(len(all_genres))[labels]
-    indices = tf.range(start=0, limit=len(inputs))
-    shuffled = tf.random.shuffle(indices)
-    inputs = tf.gather(np.array(inputs), shuffled)
-    labels = tf.gather(np.array(labels), shuffled)
+
+    # indices = tf.range(start=0, limit=len(inputs))
+    # shuffled = tf.random.shuffle(indices)
+    # inputs = tf.gather(np.array(inputs), shuffled)
+    # labels = tf.gather(np.array(labels), shuffled)
 
     split = int(len(inputs)*.85)
     train_inputs = np.array(inputs[:split])
     train_labels = np.array(labels[:split])
     test_inputs = np.array(inputs[split:])
     test_labels = np.array(labels[split:])
-    
+
     return train_inputs, train_labels, test_inputs, test_labels
 
 
 def get_batch(data, start, size):
     return data[start:start+size]
+
+def make_numerical_lists(train_inputs, test_inputs):
+    train_track_listens = [x.track_listens for x in train_inputs]
+    # train_album_listens = [x.album_listens for x in train_inputs]
+    train_favorites = [x.favorites for x in train_inputs]
+    train_interests = [x.interests for x in train_inputs]
+    train_inputs = np.stack((train_track_listens, train_favorites, train_interests), axis=1)
+
+    test_track_listens = [x.track_listens for x in test_inputs]
+    # test_album_listens = [x.album_listens for x in test_inputs]
+    test_favorites = [x.favorites for x in test_inputs]
+    test_interests = [x.interests for x in test_inputs]
+    test_inputs = np.stack((test_track_listens, test_favorites, test_interests), axis=1)
+
+    return train_inputs, test_inputs
+
+def make_feature_lists(train_inputs, test_inputs):
+    return [x.features for x in train_inputs], [y.features for y in test_inputs]
+
+def make_char_dict(inputs):
+    titles = []
+    max_len = 0
+    for track in inputs:
+        title = track.title
+        curr_max = len(title)
+        max_len = max(max_len, curr_max)
+        titles.append(title.lower())
+    title_lists = []
+    idx = 0
+    for title in titles:
+        padding = ["*"] * (max_len - len(title))
+        title_lists.append(list(title) + padding)
+
+
+
+    # Set window size
+    WINDOW_SIZE = max_len
+    #
+    # # Build Vocabulary (char id's)
+    chars = [j for i in title_lists for j in i]
+    vocab = set(chars) # collects all unique words in our dataset (vocab)
+    char2id = {w: i for i, w in enumerate(list(vocab))} # maps each word in our vocab to a unique index (label encode)
+
+
+    # s = map(lambda x: x.split(), title_lists)
+
+    #Create Skipgram Data
+    data = []
+    for title in title_lists:
+        for char_index, char in enumerate(title):
+            for nb_char in title[max(char_index - WINDOW_SIZE, 0) : min(char_index + WINDOW_SIZE, len(title))]:
+                if nb_char != char:
+                    data.append([char2id[char], char2id[nb_char]])
+
+    # return title_sequences, vocab_dict #a list of titles in the form of int sequences
+    return char2id, data

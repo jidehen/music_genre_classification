@@ -3,17 +3,17 @@ import numpy as np
 from tensorflow.keras import Model
 from preprocess import get_data, get_batch
 
-class Model(tf.keras.Model):
+class RNN_Model(tf.keras.Model):
     def __init__(self):
         """
         The Model class predicts the genre of a track.
         """
 
-        super(Model, self).__init__()
+        super(RNN_Model, self).__init__()
 
         self.batch_size = 200
         self.rnn_size = 256
-        self.hidden_size = 164 
+        self.hidden_size = 264 
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=.001)
         self.num_classes = 8
         self.window_size = 250
