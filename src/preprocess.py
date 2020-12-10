@@ -87,7 +87,7 @@ def make_char_dict(inputs):
     title_lists = []
     idx = 0
     for title in titles:
-        padding = ["*PAD*"] * (max_len - len(title))
+        padding = ["*"] * (max_len - len(title))
         title_lists.append(list(title) + padding)
 
 
@@ -106,11 +106,11 @@ def make_char_dict(inputs):
     #Create Skipgram Data
     data = []
     for title in title_lists:
-        for char_index, char in enumerate(title):
-            for nb_char in title[max(char_index - WINDOW_SIZE, 0) : min(char_index + WINDOW_SIZE, len(title))]:
-                if nb_char != char:
-                    data.append([char2id[char], char2id[nb_char]])
-
+        title_ids = []
+        for char in title:
+            curr_char = char2id[char]
+            title_ids.append(curr_char)
+        data.append(title_ids)
 
     # return title_sequences, vocab_dict #a list of titles in the form of int sequences
     return char2id, data

@@ -68,7 +68,8 @@ def main():
     print("Preprocessing...")
     train_inputs, train_labels, test_inputs, test_labels = preprocess.get_data("../data/fma_metadata/tracks.csv")
 
-    char2id, char_inputs = preprocess.make_char_dict(train_inputs)
+    char2id, char_train_inputs = preprocess.make_char_dict(train_inputs)
+    char2id, char_test_inputs = preprocess.make_char_dict(test_inputs)
 
     model = Model(len(char2id))
 
@@ -78,12 +79,12 @@ def main():
     print("Training...")
     losses = []
     for epoch in range(1):
-        losses.extend(train(model, numerical_train, feature_train, char_inputs, train_labels))
-    #
-    # print("Testing...")
-    # test(model, numerical_test, feature_test, char_inputs, test_labels)
-    #
-    # visualize_loss(losses)
+        losses.extend(train(model, numerical_train, feature_train, char_train_inputs, train_labels))
+
+    print("Testing...")
+    test(model, numerical_test, feature_test, char_test_inputs, test_labels)
+
+    visualize_loss(losses)
 
 if __name__ == '__main__':
     main()

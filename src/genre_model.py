@@ -26,7 +26,8 @@ class Model(tf.keras.Model):
         self.dense_layer2 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
         self.softmax_layer = tf.keras.layers.Dense(self.num_classes, activation='softmax')
         self.char_embeddings = tf.Variable(tf.random.truncated_normal(shape=[self.vocab_size, self.embedding_size], mean=0, stddev=0.01))
-        self.char_GRU = tf.keras.layers.GRU(200, return_sequences=True, return_state=True)
+
+        self.char_GRU = tf.keras.layers.GRU(200, return_sequences=False, return_state=True)
         self.char_dense1 = tf.keras.layers.Dense(self.hidden_size, activation='relu')
         self.char_dense2 = tf.keras.layers.Dense(self.hidden_size, activation='softmax')
 
@@ -35,8 +36,9 @@ class Model(tf.keras.Model):
         :param inputs: shape [batch_size, features]
         """
 
-        gru_output, _ = self.char_GRU(tf.nn.embedding_lookup(self.char_embeddings, char_inputs), initial_state=None)
-        char_output = self.char_dense2(self.char_dense1(gru_output[:, 0, :]))
+        embeddings = tf.nn.embedding_lookup(self.char_embeddings, char_inputs)
+        gru_output, _ = self.char_GRU(embeddings, initial_state=None)
+        char_output = self.char_dense2(self.char_dense1(gru_output))
 
         # numerical_output = self.num_dense1(numerical_inputs)
         # numerical_output = self.dense_layer1(numerical_output)
