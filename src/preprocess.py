@@ -61,13 +61,13 @@ def get_batch(data, start, size):
 
 def make_numerical_lists(train_inputs, test_inputs):
     train_track_listens = [x.track_listens for x in train_inputs]
-    # train_album_listens = [x.album_listens for x in train_inputs]
+    train_album_listens = [x.album_listens for x in train_inputs]
     train_favorites = [x.favorites for x in train_inputs]
     train_interests = [x.interests for x in train_inputs]
     train_inputs = np.stack((train_track_listens, train_favorites, train_interests), axis=1)
 
     test_track_listens = [x.track_listens for x in test_inputs]
-    # test_album_listens = [x.album_listens for x in test_inputs]
+    test_album_listens = [x.album_listens for x in test_inputs]
     test_favorites = [x.favorites for x in test_inputs]
     test_interests = [x.interests for x in test_inputs]
     test_inputs = np.stack((test_track_listens, test_favorites, test_interests), axis=1)
@@ -85,6 +85,7 @@ def make_char_dict(inputs):
         curr_max = len(title)
         max_len = max(max_len, curr_max)
         titles.append(title.lower())
+
     title_lists = []
     idx = 0
     for title in titles:
@@ -104,13 +105,14 @@ def make_char_dict(inputs):
 
     # s = map(lambda x: x.split(), title_lists)
 
-    #Create Skipgram Data
+    #Create Data
     data = []
     for title in title_lists:
-        for char_index, char in enumerate(title):
-            for nb_char in title[max(char_index - WINDOW_SIZE, 0) : min(char_index + WINDOW_SIZE, len(title))]:
-                if nb_char != char:
-                    data.append([char2id[char], char2id[nb_char]])
+        title_ids = []
+        for char in title:
+            curr_char = char2id[char]
+            title_ids.append(curr_char)
+        data.append(title_ids)
 
     # return title_sequences, vocab_dict #a list of titles in the form of int sequences
-    return char2id, data
+    return char2id, np.asarray(data)

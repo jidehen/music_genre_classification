@@ -6,7 +6,7 @@ from genre_model import Model
 from seq2seq import RNN_Seq2Seq
 import matplotlib.pyplot as plt
 
-def train(model, numerical_inputs, feature_inputs, char_inputs, train_labels):
+def train(model, numerical_inputs, feature_inputs, char_inputs, actor_char_inputs, train_labels):
     max_itr = len(feature_inputs) // model.batch_size
 
     losses = []
@@ -15,9 +15,10 @@ def train(model, numerical_inputs, feature_inputs, char_inputs, train_labels):
         numerical_input_batch = preprocess.get_batch(numerical_inputs, i*model.batch_size, model.batch_size)
         feature_input_batch = preprocess.get_batch(feature_inputs, i*model.batch_size, model.batch_size)
         char_input_batch = preprocess.get_batch(char_inputs, i*model.batch_size, model.batch_size)
+        actor_char_input_batch = preprocess.get_batch(actor_char_inputs, i*model.batch_size, model.batch_size)
         label_batch = preprocess.get_batch(train_labels, i*model.batch_size, model.batch_size)
         with tf.GradientTape() as tape:
-            logits = model.call(numerical_input_batch, tf.convert_to_tensor(feature_input_batch), char_input_batch, is_training=None)
+            logits = model.call(numerical_input_batch, tf.convert_to_tensor(feature_input_batch), char_input_batch, actor_char_input_batch, is_training=None)
             loss = model.loss(logits, label_batch)
             losses.append(loss)
             print("Batch loss: {}".format(loss))
@@ -26,15 +27,16 @@ def train(model, numerical_inputs, feature_inputs, char_inputs, train_labels):
         model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     return losses
 
-def test(model, numerical_inputs, feature_inputs, char_inputs, test_labels):
+def test(model, numerical_inputs, feature_inputs, char_inputs, actor_char_inputs, test_labels):
     max_itr = len(feature_inputs) // model.batch_size
     accuracies = []
     for i in range(max_itr):
         numerical_input_batch = preprocess.get_batch(numerical_inputs, i*model.batch_size, model.batch_size)
         feature_input_batch = preprocess.get_batch(feature_inputs, i*model.batch_size, model.batch_size)
         char_input_batch = preprocess.get_batch(char_inputs, i*model.batch_size, model.batch_size)
+        actor_char_input_batch = preprocess.get_batch(actor_char_inputs, i*model.batch_size, model.batch_size)
         label_batch = preprocess.get_batch(test_labels, i*model.batch_size, model.batch_size)
-        logits = model.call(numerical_input_batch, tf.convert_to_tensor(feature_input_batch), char_input_batch, is_training=False)
+        logits = model.call(numerical_input_batch, tf.convert_to_tensor(feature_input_batch), char_input_batch, actor_char_input_batch, is_training=False)
         accuracies.append(model.accuracy(logits, label_batch))
     print("Testing accuracy: ", tf.reduce_mean(accuracies))
 
@@ -63,19 +65,22 @@ def main():
     char2id, char_inputs = preprocess.make_char_dict(train_inputs)
     _, test_char_inputs = preprocess.make_char_dict(test_inputs)
 
-    model = Model(len(char2id))
+    actor_char2id, actor_char_inputs = preprocess.make_char_dict(train_inputs)
+    _, actor_test_char_inputs = preprocess.make_char_dict(test_inputs)
+
+    model = Model(len(char2id), len(actor_char2id))
 
     numerical_train, numerical_test = preprocess.make_numerical_lists(train_inputs, test_inputs)
     feature_train, feature_test = preprocess.make_feature_lists(train_inputs, test_inputs)
 
     print("Training...")
     losses = []
-    for epoch in range(10):
-        losses.extend(train(model, numerical_train, feature_train, char_inputs, train_labels))
-    
+    for epoch in range(2):
+        losses.extend(train(model, numerical_train, feature_train, char_inputs, actor_char_inputs, train_labels))
+
     print("Testing...")
-    test(model, numerical_test, feature_test, test_char_inputs, test_labels)
-    
+    test(model, numerical_test, feature_test, test_char_inputs, actor_test_char_inputs, test_labels)
+
     visualize_loss(losses)
 
 if __name__ == '__main__':
